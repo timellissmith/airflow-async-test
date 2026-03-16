@@ -62,3 +62,35 @@ If you intend to use this repository to design your own data stack:
 * If you have <1,000 requests to make: Use **Dynamic Mapping** (`dag_dynamic.py`).
 * If you have 100,000+ requests to make: Use **Chunked Async Mapping** (`dag_async_chunked.py`).
 * If your API calls take >60 seconds to respond per request: Use **Deferrable Operators** (`dag_deferrable.py`).
+
+## Deployment
+
+### 1. Standard Airflow / Google Cloud Composer
+To deploy these DAGs, you simply need to upload the `dags/` folder contents into your environment's designated DAGs bucket/folder.
+
+For Google Cloud Composer:
+```bash
+# Upload all python scripts and the yaml configuration
+gcloud storage cp dags/* gs://<YOUR_COMPOSER_BUCKET>/dags/
+```
+
+### 2. Enabling Deferrable Operators (Triggers)
+The `simulate_api_deferrable` DAG requires an active Airflow **Triggerer** process running in your cluster.
+
+**On Google Cloud Composer 2.x:**
+By default, the Triggerer component is *not* enabled to save costs. You must explicitly configure at least 1 triggerer instance.
+```bash
+gcloud composer environments update <ENVIRONMENT_NAME> \
+    --location <LOCATION> \
+    --enable-triggerer \
+    --triggerer-count 1 \
+    --triggerer-cpu 0.5 \
+    --triggerer-memory 0.5GB
+```
+
+**On Local / Open-Source Airflow:**
+When starting your Airflow services, ensure you run the triggerer CLI command alongside your scheduler and webserver:
+```bash
+airflow triggerer
+```
+If you are using Docker Compose (e.g., the official `docker-compose.yaml`), make sure the `airflow-triggerer` service is uncommented and running.

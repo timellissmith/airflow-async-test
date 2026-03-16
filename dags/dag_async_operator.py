@@ -22,18 +22,26 @@ class AsyncApiCallOperator(BaseOperator):
 
     async def _process_call_with_semaphore(self, semaphore, call):
         async with semaphore:
-            try:
-                # Simulate an asynchronous API call
-                await asyncio.sleep(call.get("wait", 1))
-                
-                # Simulate a random error for demonstration purposes (~5% chance)
-                if random.random() < 0.05:
-                   raise Exception(f"Simulated network timeout for {call['id']}")
-                   
-                return {"id": call['id'], "status": "success", "error": None}
-            except Exception as e:
-                self.log.error(f"Error processing call {call['id']}: {str(e)}")
-                return {"id": call['id'], "status": "failed", "error": str(e)}
+            max_retries = 3
+            base_delay = 1
+            for attempt in range(max_retries + 1):
+                try:
+                    # Simulate an asynchronous API call
+                    await asyncio.sleep(call.get("wait", 1))
+                    
+                    # Simulate a random error for demonstration purposes (~5% chance)
+                    if random.random() < 0.05:
+                       raise Exception(f"Simulated network timeout for {call['id']}")
+                       
+                    return {"id": call['id'], "status": "success", "error": None}
+                except Exception as e:
+                    if attempt < max_retries:
+                        delay = min((base_delay * (2 ** attempt)) + random.uniform(0, 1), 60)
+                        self.log.warning(f"Error processing call {call['id']}: {str(e)}. Retrying in {delay:.2f}s (Attempt {attempt+1}/{max_retries})...")
+                        await asyncio.sleep(delay)
+                    else:
+                        self.log.error(f"Failed processing call {call['id']} after {max_retries} retries: {str(e)}")
+                        return {"id": call['id'], "status": "failed", "error": str(e)}
 
     async def _run_all_async_calls(self, calls):
         semaphore = asyncio.Semaphore(self.max_concurrent)
@@ -78,7 +86,8 @@ with DAG(
     run_async_custom = AsyncApiCallOperator(
         task_id="run_async_calls_with_error_handling",
         yaml_filepath=YAML_FILE,
-        max_concurrent=50
+        max_concurrent=50,
+        retries=0
     )
     
     # Dummy task that runs regardless of whether the upstream task fails or succeeds
