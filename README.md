@@ -82,10 +82,9 @@ By default, the Triggerer component is *not* enabled to save costs. You must exp
 ```bash
 gcloud composer environments update <ENVIRONMENT_NAME> \
     --location <LOCATION> \
-    --enable-triggerer \
     --triggerer-count 1 \
     --triggerer-cpu 0.5 \
-    --triggerer-memory 0.5GB
+    --triggerer-memory 1GB
 ```
 
 **On Local / Open-Source Airflow:**
