@@ -68,12 +68,12 @@ If you intend to use this repository to design your own data stack:
 ### 1. Standard Airflow / Google Cloud Composer
 To deploy these DAGs, you simply need to upload the `dags/` directory into your environment's designated DAGs bucket/folder.
 
-The `dags/triggers/` folder MUST be uploaded as well because the Deferrable Operator relies on it as a standalone Python package to bypass Airflow serialization constraints.
+The `plugins/triggers/` folder MUST be uploaded as well because the Deferrable Operator relies on it as a standalone Python package to bypass Airflow serialization constraints.
 
 For Google Cloud Composer:
 ```bash
 # Upload the entire dags directory seamlessly without glob wildcard issues
-gcloud storage cp -r dags gs://<YOUR_COMPOSER_BUCKET>/
+gcloud storage cp -r dags plugins gs://<YOUR_COMPOSER_BUCKET>/
 ```
 
 ### 2. Enabling Deferrable Operators (Triggers)
