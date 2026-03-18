@@ -9,7 +9,7 @@ import os
 import asyncio
 from typing import Any, Dict, Tuple
 
-from triggers.mock_api import MockApiCallTrigger
+from composer_custom_triggers.triggers.mock_api import MockApiCallTrigger
 
 YAML_FILE = os.path.join(os.path.dirname(__file__), "api_calls.yaml")
 

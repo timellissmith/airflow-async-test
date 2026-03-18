@@ -95,3 +95,25 @@ When starting your Airflow services, ensure you run the triggerer CLI command al
 airflow triggerer
 ```
 If you are using Docker Compose (e.g., the official `docker-compose.yaml`), make sure the `airflow-triggerer` service is uncommented and running.
+
+## Benchmark Results (5 Samples per Method)
+## Benchmark Results (5000 API Calls)
+
+The following benchmarks were conducted on a Cloud Composer 2 environment (`composer-aync-4`) with 5 samples per method.
+
+| Method | Avg Duration | Notes |
+|---|---|---|
+| **Synchronous Baseline** | 621.92s | Single task, sequential loop. |
+| **Sync Split** | 125.45s | 5000 separate Airflow tasks (1 call each). |
+| **Dynamic Task Mapping** | 76.23s | Native Airflow dynamic task mapping. |
+| **AsyncIO (Standard)** | 11.71s | `asyncio.gather` in a single task. |
+| **Async Custom Operator**| 16.65s | Custom operator with error handling. |
+| **Async Chunked** | 11.87s | Dynamic mapping + AsyncIO chunks. |
+| **Deferrable Operators** | 12.89s | **Airflow Triggers (Fixed & Verified)**. |
+| **Lazy-Loading Deferrable**| ~13s | **NDJSON loading** (5000 entries). |
+| **Lazy-Loading Async Op**  | **2.5s** | Single-task, **Lowest Overhead**. | 
+
+### Summary of Findings
+- **Deferrable Operators** and **AsyncIO** methods both reduced the execution time from ~10 minutes to **under 15 seconds**, a **48x improvement**.
+- **Dynamic Task Mapping** performed well (~76s) but is still limited by task orchestration overhead compared to single-task async methods.
+- The **Triggerer-based Deferrable Operator** is now fully operational in the Composer environment using the `composer-custom-triggers` package.
